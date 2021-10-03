@@ -1,0 +1,5 @@
+{
+  "editor.tabSize": 4,
+  "python.jediEnabled": true,
+  "python.languageServer": "Jedi"
+}
