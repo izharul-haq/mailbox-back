@@ -1,5 +1,9 @@
 {
   "editor.tabSize": 4,
   "python.jediEnabled": true,
-  "python.languageServer": "Jedi"
+  "python.languageServer": "Jedi",
+  "cmake.configureOnOpen": true,
+  "python.formatting.provider": "autopep8",
+  "python.formatting.autopep8Args": ["--max-line-length", "79", "--experimental"],
+  "python.linting.pylintArgs": ["--generate-members"]
 }
