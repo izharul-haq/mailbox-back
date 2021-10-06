@@ -4,30 +4,34 @@ from logging import exception
 from math import ceil
 from os import remove
 
-from flask import Blueprint, Response, request, jsonify
+from flask import Blueprint, request, Response, jsonify
 from werkzeug.wsgi import FileWrapper
 
-from services import rsa
+from services import elgamal
 from .utils import bytes_to_ints
 
-RSA = Blueprint('rsa', __name__, url_prefix='/rsa')
+Elgamal = Blueprint('elgamal', __name__, url_prefix='/elgamal')
 
 
-@RSA.route('/key/<string:key_type>', methods=['POST'])
+@Elgamal.route('/key/<string:key_type>', methods=['POST'])
 def generate_key(key_type: str):
     req_body = loads(request.data)
 
     p = req_body['p']
-    q = req_body['q']
-    e = req_body['e']
+    g = req_body['g']
+    x = req_body['x']
 
     try:
         if key_type == 'public' or key_type == 'private':
-            key = rsa.generate_key(key_type, p, q, e)
+            key = elgamal.generate_key(key_type, p, g, x)
 
-            with open(f'bin/RSA/{key_type}.key', 'w') as f:
+            with open(f'bin/Elgamal/{key_type}.key', 'w') as f:
                 f.writelines(str(key[0]) + '\n')
                 f.writelines(str(key[1]) + '\n')
+
+                if key_type == 'public':
+                    f.writelines(str(key[2]) + '\n')
+
                 f.close()
 
             return f'{key_type.capitalize()} key created', 201
@@ -42,11 +46,11 @@ def generate_key(key_type: str):
         return jsonify({'code': 400, 'message': err_message}), 400
 
 
-@RSA.route('/key/delete', methods=['DELETE'])
+@Elgamal.route('/key/delete', methods=['DELETE'])
 def delete_key():
     try:
-        remove('bin/RSA/public.key')
-        remove('bin/RSA/private.key')
+        remove('bin/Elgamal/public.key')
+        remove('bin/Elgamal/private.key')
 
         return 'Created key has been deleted', 204
 
@@ -57,12 +61,13 @@ def delete_key():
         return jsonify({'code': 400, 'message': err_message}), 400
 
 
-@RSA.route('/encrypt/<string:input_type>', methods=['POST'])
+@Elgamal.route('/encrypt/<string:input_type>', methods=['POST'])
 def encrypt(input_type: str):
     try:
-        with open('bin/RSA/public.key', 'r') as f:
-            e = int(f.readline())
-            n = int(f.readline())
+        with open('bin/Elgamal/public.key', 'r') as f:
+            y = int(f.readline())
+            g = int(f.readline())
+            p = int(f.readline())
 
             f.close()
 
@@ -71,7 +76,7 @@ def encrypt(input_type: str):
 
             file_buffer = req_file.read()
 
-            res = rsa.encrypt(file_buffer, e, n)
+            res = elgamal.encrypt(file_buffer, y, g, p)
 
             res_buffer = BytesIO(res)
             wrapper = FileWrapper(res_buffer)
@@ -86,14 +91,14 @@ def encrypt(input_type: str):
 
             message_buffer = bytes(message, 'utf-8')
 
-            res = rsa.encrypt(message_buffer, e, n)
+            res = elgamal.encrypt(message_buffer, y, g, p)
 
-            group_size = ceil((n.bit_length() - 1) / 8)
+            group_size = ceil((p.bit_length() - 1) / 8)
 
             return jsonify(bytes_to_ints(res, group_size)), 200
 
         else:
-            raise Exception(f'input type {input_type} is not supported')
+            raise Exception(f'key type {key_type} is not supported')
 
     except Exception as e:
         err_message = str(e)
@@ -102,39 +107,39 @@ def encrypt(input_type: str):
         return jsonify({'code': 400, 'message': err_message}), 400
 
 
-@RSA.route('/decrypt/<string:input_type>', methods=['POST'])
+@Elgamal.route('/decrypt/<string:input_type>', methods=['POST'])
 def decrypt(input_type: str):
     try:
-        with open('bin/RSA/private.key', 'r') as f:
-            d = int(f.readline())
-            n = int(f.readline())
+        with open('bin/Elgamal/private.key', 'r') as f:
+            x = int(f.readline())
+            p = int(f.readline())
 
             f.close()
 
-            if input_type == 'file':
-                req_file = request.files['message']
+        if input_type == 'file':
+            req_file = request.files['message']
 
-                file_buffer = req_file.read()
+            file_buffer = req_file.read()
 
-                res = rsa.decrypt(file_buffer, d, n)
+            res = elgamal.decrypt(file_buffer, x, p)
 
-                res_buffer = BytesIO(res)
-                wrapper = FileWrapper(res_buffer)
+            res_buffer = BytesIO(res)
+            wrapper = FileWrapper(res_buffer)
 
-                return Response(wrapper, mimetype=req_file.mimetype,
-                                direct_passthrough=True), 200
+            return Response(wrapper, mimetype=req_file.mimetype,
+                            direct_passthrough=True), 200
 
-            elif input_type == 'text':
-                req_body = loads(request.data)
+        elif input_type == 'text':
+            req_body = loads(request.data)
 
-                message = req_body['message']
+            message = req_body['message']
 
-                res = rsa.decrypt(message, d, n)
+            res = elgamal.decrypt(message, x, p)
 
-                return res.replace(b'\x00', b'').decode('utf-8'), 200
+            return res.replace(b'\x00', b'').decode('utf-8'), 200
 
-            else:
-                raise Exception(f'input type {input_type} is not supported')
+        else:
+            raise Exception(f'key type {key_type} is not supported')
 
     except Exception as e:
         err_message = str(e)
