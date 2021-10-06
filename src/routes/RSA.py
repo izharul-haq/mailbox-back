@@ -1,11 +1,13 @@
-from flask import Blueprint, Response, request, jsonify
 from io import BytesIO
 from json import loads
 from logging import exception
 from math import ceil
-from services import rsa
+import os
+
+from flask import Blueprint, Response, request, jsonify
 from werkzeug.wsgi import FileWrapper
 
+from services import rsa
 from .utils import bytes_to_ints
 
 RSA = Blueprint('rsa', __name__, url_prefix='/rsa/')
@@ -28,11 +30,25 @@ def generate_key(key_type: str):
                 f.writelines(str(key[1]) + '\n')
                 f.close()
 
-            return jsonify(
-                {'message': f'{key_type.capitalize()} key created'}), 201
+            return f'{key_type.capitalize()} key created', 201
 
         else:
             raise Exception(f'key type {key_type} is not supported')
+
+    except Exception as e:
+        err_message = str(e)
+        exception(err_message)
+
+        return jsonify({'code': 400, 'message': err_message}), 400
+
+
+@RSA.route('/key/delete', methods=['DELETE'])
+def delete_key():
+    try:
+        os.remove('bin/RSA/public.key')
+        os.remove('bin/RSA/private.key')
+
+        return 'Created key has been deleted', 204
 
     except Exception as e:
         err_message = str(e)
