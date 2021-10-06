@@ -3,13 +3,16 @@ from flask_cors import CORS
 from logging import basicConfig
 from routes import RSA
 
-basicConfig(filename='app.log', filemode='w', format='%(asctime)s %(levelname)s %(message)s')
+basicConfig(
+    filename='app.log', filemode='w',
+    format='%(asctime)s %(levelname)s %(message)s')
 
 app = Flask(__name__)
 
 app.register_blueprint(RSA)
 
 CORS(app)
+
 
 @app.route('/', methods=['GET'])
 def index():

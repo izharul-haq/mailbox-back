@@ -3,7 +3,7 @@ from io import BytesIO
 from json import loads
 from logging import exception
 from math import ceil
-from services import RSA_key, RSA_decrypt, RSA_encrypt
+from services import rsa
 from werkzeug.wsgi import FileWrapper
 
 from .utils import bytes_to_ints
@@ -21,7 +21,7 @@ def generate_key(key_type: str):
 
     try:
         if key_type == 'public' or key_type == 'private':
-            key = RSA_key(key_type, p, q, e)
+            key = rsa.generate_key(key_type, p, q, e)
 
             with open(f'bin/RSA/{key_type}.key', 'w') as f:
                 f.writelines(str(key[0]) + '\n')
@@ -55,7 +55,7 @@ def encrypt(input_type: str):
 
             file_buffer = req_file.read()
 
-            res = RSA_encrypt(file_buffer, e, n)
+            res = rsa.encrypt(file_buffer, e, n)
 
             res_buffer = BytesIO(res)
             wrapper = FileWrapper(res_buffer)
@@ -70,7 +70,7 @@ def encrypt(input_type: str):
 
             message_buffer = bytes(message, 'utf-8')
 
-            res = RSA_encrypt(message_buffer, e, n)
+            res = rsa.encrypt(message_buffer, e, n)
 
             group_size = ceil((n.bit_length() - 1) / 8)
 
@@ -100,7 +100,7 @@ def decrypt(input_type: str):
 
                 file_buffer = req_file.read()
 
-                res = RSA_decrypt(file_buffer, d, n)
+                res = rsa.decrypt(file_buffer, d, n)
 
                 res_buffer = BytesIO(res)
                 wrapper = FileWrapper(res_buffer)
@@ -113,7 +113,7 @@ def decrypt(input_type: str):
 
                 message = req_body['message']
 
-                res = RSA_decrypt(message, d, n)
+                res = rsa.decrypt(message, d, n)
 
                 return res.replace(b'\x00', b'').decode('utf-8'), 200
 
