@@ -1,6 +1,6 @@
 # mailbox-back
 
-Backend-side of mailbox, web application to encrypt message using public key infrastucture. For the frontend-side, click [here](https://github.com/izharul-haq/mailbox-front).
+Backend-side of mailbox, web application to encrypt message/decrypt using public key infrastucture. For the frontend-side, click [here](https://github.com/izharul-haq/mailbox-front).
 
 ## Requirements
 
