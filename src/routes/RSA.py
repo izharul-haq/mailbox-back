@@ -17,8 +17,6 @@ RSA = Blueprint('rsa', __name__, url_prefix='/rsa')
 def generate_key(key_type: str):
     req_body = loads(request.data)
 
-    print(req_body)
-
     p = req_body['p']
     q = req_body['q']
     e = req_body['e']
