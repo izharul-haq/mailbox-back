@@ -30,11 +30,11 @@ def decrypt(cipher: Union[bytes, list[int]], d: int, n: int) -> bytes:
 
     if type(cipher) == bytes:
         for i in range(0, len(cipher), chunk_size):
-            chunk: bytes = cipher[i:i + chunk_size]
+            chunk: bytes = cipher[i:i+chunk_size]
 
-            cipher: int = pow(int.from_bytes(chunk, byteorder='big'), d, n)
+            message: int = pow(int.from_bytes(chunk, byteorder='big'), d, n)
 
-            res.append(cipher.to_bytes(chunk_size - 1, byteorder='big'))
+            res.append(message.to_bytes(chunk_size - 1, byteorder='big'))
 
     else:
         for number in cipher:

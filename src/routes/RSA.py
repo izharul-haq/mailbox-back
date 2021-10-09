@@ -2,7 +2,7 @@ from io import BytesIO
 from json import loads
 from logging import exception
 from math import ceil
-from os import remove
+import os
 
 from flask import Blueprint, Response, request, jsonify
 from werkzeug.wsgi import FileWrapper
@@ -17,20 +17,68 @@ RSA = Blueprint('rsa', __name__, url_prefix='/rsa')
 def generate_key(key_type: str):
     req_body = loads(request.data)
 
+    print(req_body)
+
     p = req_body['p']
     q = req_body['q']
     e = req_body['e']
 
     try:
-        if key_type == 'public' or key_type == 'private':
-            key = rsa.generate_key(key_type, p, q, e)
+        e, d, n = rsa.generate_key(p, q, e)
+        res = {}
 
-            with open(f'bin/RSA/{key_type}.key', 'w') as f:
-                f.writelines(str(key[0]) + '\n')
-                f.writelines(str(key[1]) + '\n')
+        if key_type == 'public':
+            with open(f'bin/RSA/public.key', 'w') as f:
+                f.writelines(str(e) + '\n')
+                f.writelines(str(n) + '\n')
                 f.close()
 
-            return f'{key_type.capitalize()} key created', 201
+            res = {'e': e, 'n': n}
+
+        elif key_type == 'private':
+            with open(f'bin/RSA/private.key', 'w') as f:
+                f.writelines(str(d) + '\n')
+                f.writelines(str(n) + '\n')
+                f.close()
+
+            res = {'d': d, 'n': n}
+
+        elif key_type == 'all':
+            with open(f'bin/RSA/public.key', 'w') as f:
+                f.writelines(str(e) + '\n')
+                f.writelines(str(n) + '\n')
+                f.close()
+
+            with open(f'bin/RSA/private.key', 'w') as f:
+                f.writelines(str(d) + '\n')
+                f.writelines(str(n) + '\n')
+                f.close()
+
+            res = {'e': e, 'd': d, 'n': n}
+
+        else:
+            raise Exception(f'key type {key_type} is not supported')
+
+        return jsonify(res), 201
+
+    except Exception as e:
+        err_message = str(e)
+        exception(err_message)
+
+        return jsonify({'code': 400, 'message': err_message}), 400
+
+
+@RSA.route('/key/<string:key_type>/check/', methods=['GET'])
+def check_key(key_type: str):
+    try:
+        if key_type == 'all':
+            return jsonify(
+                os.path.exists('bin/RSA/public.key')
+                and os.path.exists('bin/RSA/private.key')
+            ), 200
+
+        elif key_type == 'public' or key_type == 'private':
+            return jsonify(os.path.exists(f'bin/RSA/{key_type}.key')), 200
 
         else:
             raise Exception(f'key type {key_type} is not supported')
@@ -42,13 +90,26 @@ def generate_key(key_type: str):
         return jsonify({'code': 400, 'message': err_message}), 400
 
 
-@RSA.route('/key/delete', methods=['DELETE'])
-def delete_key():
+@RSA.route('/key/<string:key_type>', methods=['DELETE'])
+def delete_key(key_type: str):
     try:
-        remove('bin/RSA/public.key')
-        remove('bin/RSA/private.key')
+        msg = ''
 
-        return 'Created key has been deleted', 204
+        if key_type == 'all':
+            os.remove('bin/RSA/public.key')
+            os.remove('bin/RSA/private.key')
+
+            msg = 'All keys deleted'
+
+        elif key_type == 'public' or key_type == 'private':
+            os.remove(f'bin/RSA/{key_type}.key')
+
+            msg = f'{key_type.capitalize()} key deleted'
+
+        else:
+            raise Exception(f'key type {key_type} is not supported')
+
+        return msg, 204
 
     except Exception as e:
         err_message = str(e)

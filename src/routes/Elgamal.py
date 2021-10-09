@@ -2,7 +2,7 @@ from io import BytesIO
 from json import loads
 from logging import exception
 from math import ceil
-from os import remove
+import os
 
 from flask import Blueprint, request, Response, jsonify
 from werkzeug.wsgi import FileWrapper
@@ -22,19 +22,67 @@ def generate_key(key_type: str):
     x = req_body['x']
 
     try:
-        if key_type == 'public' or key_type == 'private':
-            key = elgamal.generate_key(key_type, p, g, x)
+        y, g, x, p = elgamal.generate_key(p, g, x)
+        res = {}
 
-            with open(f'bin/Elgamal/{key_type}.key', 'w') as f:
-                f.writelines(str(key[0]) + '\n')
-                f.writelines(str(key[1]) + '\n')
-
-                if key_type == 'public':
-                    f.writelines(str(key[2]) + '\n')
-
+        if key_type == 'all':
+            with open(f'bin/Elgamal/public.key', 'w') as f:
+                f.writelines(str(y) + '\n')
+                f.writelines(str(g) + '\n')
+                f.writelines(str(p) + '\n')
                 f.close()
 
-            return f'{key_type.capitalize()} key created', 201
+            with open(f'bin/Elgamal/private.key', 'w') as f:
+                f.writelines(str(x) + '\n')
+                f.writelines(str(p) + '\n')
+                f.close()
+
+            res = {'y': y, 'g': g, 'x': x, 'p': p}
+
+        elif key_type == 'public':
+            with open(f'bin/Elgamal/public.key', 'w') as f:
+                f.writelines(str(y) + '\n')
+                f.writelines(str(g) + '\n')
+                f.writelines(str(p) + '\n')
+                f.close()
+
+            res = {'y': y, 'g': g, 'p': p}
+
+        elif key_type == 'private':
+            with open(f'bin/Elgamal/private.key', 'w') as f:
+                f.writelines(str(x) + '\n')
+                f.writelines(str(p) + '\n')
+                f.close()
+
+            res = {'x': x, 'p': p}
+
+        else:
+            raise Exception(f'key type {key_type} is not supported')
+
+        return jsonify(res), 201
+
+    except Exception as e:
+        err_message = str(e)
+        exception(err_message)
+
+        return jsonify({'code': 400, 'message': err_message}), 400
+
+
+@Elgamal.route('/key/<string:key_type>', methods=['DELETE'])
+def delete_key(key_type: str):
+    try:
+        msg = ''
+
+        if key_type == 'all':
+            os.remove('bin/Elgamal/public.key')
+            os.remove('bin/Elgamal/private.key')
+
+            msg = 'All keys deleted'
+
+        elif key_type == 'public' or key_type == 'private':
+            os.remove(f'bin/Elgamal/{key_type}.key')
+
+            msg = f'{key_type.capitalize()} key deleted'
 
         else:
             raise Exception(f'key type {key_type} is not supported')
@@ -46,13 +94,20 @@ def generate_key(key_type: str):
         return jsonify({'code': 400, 'message': err_message}), 400
 
 
-@Elgamal.route('/key/delete', methods=['DELETE'])
-def delete_key():
+@Elgamal.route('/key/<string:key_type>/check/', methods=['GET'])
+def check_key(key_type: str):
     try:
-        remove('bin/Elgamal/public.key')
-        remove('bin/Elgamal/private.key')
+        if key_type == 'all':
+            return jsonify(
+                os.path.exists('bin/Elgamal/public.key')
+                and os.path.exists('bin/Elgamal/private.key')
+            ), 200
 
-        return 'Created key has been deleted', 204
+        elif key_type == 'public' or key_type == 'private':
+            return jsonify(os.path.exists(f'bin/Elgamal/{key_type}.key')), 200
+
+        else:
+            raise Exception(f'key type {key_type} is not supported')
 
     except Exception as e:
         err_message = str(e)

@@ -1,7 +1,7 @@
 from typing import Union
 
 
-def generate_key(key_type: str, p: int, g: int, x: int) -> tuple:
+def generate_key(p: int, g: int, x: int) -> (int, int, int, int):
     '''Generate Elgamal public/private key using given prime number p
     and random number g and x.
 
@@ -9,8 +9,4 @@ def generate_key(key_type: str, p: int, g: int, x: int) -> tuple:
 
     y = pow(g, x, p)
 
-    if key_type == 'public':
-        return (y, g, p)
-
-    else:   # key_type == 'private'
-        return (x, p)
+    return (y, g, x, p)
