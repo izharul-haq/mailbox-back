@@ -4,7 +4,7 @@ Backend-side of Mailbox, web application to encrypt message/decrypt using public
 
 ## Requirements
 
-1. [Python](https://www.python.org/) 3 (preferably latest stable version).
+1. [Python](https://www.python.org/) 3.8+ (preferably latest stable version).
 
 ## How to Install
 
