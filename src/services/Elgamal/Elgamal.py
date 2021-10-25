@@ -4,7 +4,7 @@ from typing import Union
 
 
 def encrypt(message: bytes, y: int, g: int, p: int) -> bytes:
-    '''Encrypt given message with saved public key (g, y, p)
+    '''Encrypt given message with public key (g, y, p)
     using Elgamal algorithm.'''
 
     res: list[bytes] = []
@@ -27,7 +27,7 @@ def encrypt(message: bytes, y: int, g: int, p: int) -> bytes:
 
 
 def decrypt(cipher: Union[bytes, list[int]], x: int, p: int) -> bytes:
-    '''Decrypt given cipher with saved private key (x, p) 
+    '''Decrypt given cipher with private key (x, p) 
     using Elgamal algorithm.'''
 
     res: list[bytes] = []

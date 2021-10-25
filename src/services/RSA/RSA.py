@@ -3,7 +3,7 @@ from typing import Union
 
 
 def encrypt(message: bytes, e: int, n: int) -> bytes:
-    '''Encrypt given message using saved public key (e, n)
+    '''Encrypt given message using public key (e, n)
     with RSA algorithm.'''
 
     res: list[bytes] = []
@@ -21,7 +21,7 @@ def encrypt(message: bytes, e: int, n: int) -> bytes:
 
 
 def decrypt(cipher: Union[bytes, list[int]], d: int, n: int) -> bytes:
-    '''Decrypt given cipher using saved private key (d, n)
+    '''Decrypt given cipher using private key (d, n)
     with RSA algorithm.'''
 
     res: list[bytes] = []

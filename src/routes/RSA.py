@@ -36,7 +36,7 @@ def generate_key(key_type: str):
         else:
             raise Exception(f'key type {key_type} is not supported')
 
-        return jsonify(res), 201
+        return jsonify(res), 200
 
     except Exception as e:
         err_message = str(e)

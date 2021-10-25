@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from logging import basicConfig
-from routes import RSA, Elgamal, DiffieHellman
+from routes import RSA, Elgamal, DiffieHellman, Paillier
 
 basicConfig(
     filename='app.log', filemode='w',
@@ -12,6 +12,7 @@ app = Flask(__name__)
 app.register_blueprint(RSA)
 app.register_blueprint(Elgamal)
 app.register_blueprint(DiffieHellman)
+app.register_blueprint(Paillier)
 
 CORS(app)
 
