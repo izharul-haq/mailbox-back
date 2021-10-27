@@ -46,9 +46,77 @@ def create_key(key_type: str):
 
 @Paillier.route('/encrypt/<string:input_type>', methods=['POST'])
 def encrypt(input_type: str):
-    pass
+    try:
+        if input_type == 'file':
+            req_file = request.files['message']
+
+            file_buffer = req_file.read()
+            g, n = list(map(int, request.form.get('key').split(', ')))
+
+            res = pa.encrypt(file_buffer, g, n)
+
+            res_buffer = BytesIO(res)
+            wrapper = FileWrapper(res_buffer)
+
+            return Response(wrapper, mimetype=req_file.mimetype,
+                            direct_passthrough=True), 200
+
+        elif input_type == 'text':
+            req_body = loads(request.data)
+
+            message = req_body['message']
+            g, n = req_body['key']
+
+            message_buffer = bytes(message, 'utf-8')
+
+            res = pa.encrypt(message_buffer, g, n)
+
+            group_size = ceil(((n*n).bit_length() - 1) / 8)
+
+            return jsonify(bytes_to_ints(res, group_size)), 200
+
+        else:
+            raise Exception(f'input type {input_type} is not supported')
+
+    except Exception as e:
+        err_message = str(e)
+        exception(err_message)
+
+        return jsonify({'code': 400, 'message': err_message}), 400
 
 
 @Paillier.route('/decrypt/<string:input_type>', methods=['POST'])
 def decrypt(input_type: str):
-    pass
+    try:
+        if input_type == 'file':
+            req_file = request.files['message']
+
+            file_buffer = req_file.read()
+            g, n, l, m = list(map(int, request.form.get('key').split(', ')))
+
+            res = pa.decrypt(file_buffer, g, n, l, m)
+
+            res_buffer = BytesIO(res)
+            wrapper = FileWrapper(res_buffer)
+
+            return Response(wrapper, mimetype=req_file.mimetype,
+                            direct_passthrough=True), 200
+
+        elif input_type == 'text':
+            req_body = loads(request.data)
+
+            message = req_body['message']
+            g, n, l, m = req_body['key']
+
+            res = pa.decrypt(message, g, n, l, m)
+
+            return res.replace(b'\x00', b'').decode('utf-8'), 200
+
+        else:
+            raise Exception(f'input type {input_type} is not supported')
+
+    except Exception as e:
+        err_message = str(e)
+        exception(err_message)
+
+        return jsonify({'code': 400, 'message': err_message}), 400
