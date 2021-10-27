@@ -51,7 +51,7 @@ def decrypt(cipher: Union[bytes, list[int]],
     chunk_size_2: int = ceil((n.bit_length()) / 8) - 1
 
     if type(cipher) == bytes:
-        for i in range(0, len(cipher), chunk_size):
+        for i in range(0, len(cipher), chunk_size_1):
             chunk: bytes = cipher[i:i+chunk_size_1]
 
             message: int = ((
