@@ -1,2 +1,2 @@
-from .utils import Point, Curve, gen_keypair
+from .utils import Point, Curve, generate_key
 from .ECC import encrypt, decrypt

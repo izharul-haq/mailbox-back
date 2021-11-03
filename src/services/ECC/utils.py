@@ -181,7 +181,12 @@ class Curve(ABC):
                      & (int.from_bytes(b"\xff" * plaintext_len, "big")))
         return plaintext.to_bytes(plaintext_len, byteorder="big")
 
-
+# def decode_point(M: Point) -> bytes:
+#         byte_len = int_length_in_byte(M.x)
+#         plaintext_len = (M.x >> ((byte_len - 1) * 8)) & 0xff
+#         plaintext = ((M.x >> ((byte_len - plaintext_len - 1) * 8))
+#                      & (int.from_bytes(b"\xff" * plaintext_len, "big")))
+#         return plaintext.to_bytes(plaintext_len, byteorder="big")
 
 def egcd(a, b):
     if a == 0:
@@ -262,7 +267,7 @@ def legendre_symbol(a, p):
 
 
 
-def gen_keypair(curve: Curve,
+def generate_key(curve: Curve,
                 randfunc: Callable = None) -> Tuple[int, Point]:
     randfunc = randfunc or urandom
     private_key = gen_private_key(curve, randfunc)
