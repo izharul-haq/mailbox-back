@@ -12,6 +12,7 @@ import json
 
 ECC = Blueprint('ecc', __name__, url_prefix='/ecc')
 
+
 @ECC.route('/key/<string:key_type>', methods=['POST'])
 def generate_key(key_type: str):
     req_body = loads(request.data)
@@ -22,7 +23,6 @@ def generate_key(key_type: str):
     n = req_body['n']
     G_x, G_y = req_body['base_point']
 
-
     try:
         curve = ecc.Curve(int(a), int(b), int(p), int(n), int(G_x), int(G_y))
 
@@ -30,7 +30,7 @@ def generate_key(key_type: str):
         res = {}
 
         if key_type == 'all':
-            res = {'public key': pub_key, 'private key': pri_key}
+            res = {'pub_key': pub_key, 'pri_key': pri_key}
 
         elif key_type == 'public':
             res = {'public key': pub_key}
@@ -61,13 +61,19 @@ def encrypt(input_type: str):
             p = req_body['p']
             n = req_body['n']
             G_x, G_y = req_body['base_point']
-            
-            curve = ecc.Curve(int(a), int(b), int(p), int(n), int(G_x), int(G_y))
+
+            curve = ecc.Curve(
+                int(a),
+                int(b),
+                int(p),
+                int(n),
+                int(G_x),
+                int(G_y))
 
             message = req_body['message']
-            x,y = req_body['key']
+            x, y = req_body['key']
 
-            pub_key = ecc.Point(int(x),int(y),curve)
+            pub_key = ecc.Point(int(x), int(y), curve)
 
             message_buffer = bytes(message, 'utf-8')
 
@@ -97,18 +103,22 @@ def decrypt(input_type: str):
             n = req_body['n']
             G_x, G_y = req_body['base_point']
 
-            x1,y1 = req_body['C1']
-            x2,y2 = req_body['C2']
+            x1, y1 = req_body['C1']
+            x2, y2 = req_body['C2']
 
-            
-            
-            curve = ecc.Curve(int(a), int(b), int(p), int(n), int(G_x), int(G_y))
+            curve = ecc.Curve(
+                int(a),
+                int(b),
+                int(p),
+                int(n),
+                int(G_x),
+                int(G_y))
 
-            C1 = ecc.Point(int(x1),int(y1), curve)
-            C2 = ecc.Point(int(x2),int(y2), curve)
+            C1 = ecc.Point(int(x1), int(y1), curve)
+            C2 = ecc.Point(int(x2), int(y2), curve)
 
             pri_key = req_body['key']
-            
+
             res = ecc.decrypt(curve, int(pri_key), C1, C2)
 
             return res.replace(b'\x00', b'').decode('utf-8'), 200
