@@ -5,6 +5,7 @@ from typing import Optional
 from binascii import hexlify
 from typing import Callable, Tuple
 
+
 @dataclass
 class Point:
     x: Optional[int]
@@ -13,6 +14,7 @@ class Point:
 
     def is_at_infinity(self) -> bool:
         return self.x is None and self.y is None
+
     def __post_init__(self):
         if not self.is_at_infinity() and not self.curve.is_on_curve(self):
             raise ValueError("The point is not on the curve.")
@@ -103,7 +105,7 @@ class Curve(ABC):
     def _add_point(self, P: Point, Q: Point) -> Point:
         delta_x = P.x - Q.x
         delta_y = P.y - Q.y
-        s = delta_y * modinv(delta_x, self.p)
+        s = delta_y * pow(delta_x, -1, self.p)
         res_x = (s * s - P.x - Q.x) % self.p
         res_y = (P.y + s * (res_x - P.x)) % self.p
         return - Point(res_x, res_y, self)
@@ -117,7 +119,7 @@ class Curve(ABC):
         return self._double_point(P)
 
     def _double_point(self, P: Point) -> Point:
-        s = (3 * P.x * P.x + self.a) * modinv(2 * P.y, self.p)
+        s = (3 * P.x * P.x + self.a) * pow(2 * P.y, -1, self.p)
         res_x = (s * s - 2 * P.x) % self.p
         res_y = (P.y + s * (res_x - P.x)) % self.p
         return - Point(res_x, res_y, self)
@@ -166,7 +168,7 @@ class Curve(ABC):
     def encode_point(self, plaintext: bytes) -> Point:
         plaintext = len(plaintext).to_bytes(1, byteorder="big") + plaintext
         while True:
-            
+
             x = int.from_bytes(plaintext, "big")
             y = self.compute_y(x)
 
@@ -181,12 +183,6 @@ class Curve(ABC):
                      & (int.from_bytes(b"\xff" * plaintext_len, "big")))
         return plaintext.to_bytes(plaintext_len, byteorder="big")
 
-# def decode_point(M: Point) -> bytes:
-#         byte_len = int_length_in_byte(M.x)
-#         plaintext_len = (M.x >> ((byte_len - 1) * 8)) & 0xff
-#         plaintext = ((M.x >> ((byte_len - plaintext_len - 1) * 8))
-#                      & (int.from_bytes(b"\xff" * plaintext_len, "big")))
-#         return plaintext.to_bytes(plaintext_len, byteorder="big")
 
 def egcd(a, b):
     if a == 0:
@@ -195,13 +191,6 @@ def egcd(a, b):
         g, y, x = egcd(b % a, a)
         return g, x - (b // a) * y, y
 
-def modinv(a, m):
-    a = a % m
-    g, x, y = egcd(a, m)
-    if g != 1:
-        raise Exception("modular inverse does not exist")
-    else:
-        return x % m
 
 def modsqrt(a, p):
     """ Find a quadratic residue (mod p) of 'a'. p
@@ -266,9 +255,8 @@ def legendre_symbol(a, p):
     return -1 if ls == p - 1 else ls
 
 
-
 def generate_key(curve: Curve,
-                randfunc: Callable = None) -> Tuple[int, Point]:
+                 randfunc: Callable = None) -> Tuple[int, Point]:
     randfunc = randfunc or urandom
     private_key = gen_private_key(curve, randfunc)
     public_key = get_public_key(private_key, curve)
@@ -282,6 +270,7 @@ def generate_key(curve: Curve,
     public_key.curve.G_x = str(public_key.curve.G_x)
     public_key.curve.G_y = str(public_key.curve.G_y)
     return private_key, public_key
+
 
 def gen_private_key(curve: Curve,
                     randfunc: Callable = None) -> int:
@@ -304,8 +293,10 @@ def gen_private_key(curve: Curve,
 
     return rand
 
+
 def get_public_key(d: int, curve: Curve) -> Point:
     return d * curve.G
+
 
 def int_length_in_byte(n: int):
     assert n >= 0
