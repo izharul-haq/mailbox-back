@@ -8,7 +8,7 @@ from werkzeug.wsgi import FileWrapper
 
 from services import ecc
 from .utils import bytes_to_ints
-
+import json
 
 ECC = Blueprint('ecc', __name__, url_prefix='/ecc')
 
@@ -20,11 +20,11 @@ def generate_key(key_type: str):
     b = req_body['b']
     p = req_body['p']
     n = req_body['n']
-    G_x, G_y = req_body['Base Point']
+    G_x, G_y = req_body['base_point']
 
 
     try:
-        curve = ecc.Curve(a, b, p, n, G_x, G_y)
+        curve = ecc.Curve(int(a), int(b), int(p), int(n), int(G_x), int(G_y))
 
         pri_key, pub_key = ecc.generate_key(curve)
         res = {}
@@ -60,14 +60,14 @@ def encrypt(input_type: str):
             b = req_body['b']
             p = req_body['p']
             n = req_body['n']
-            G_x, G_y = req_body['Base Point']
+            G_x, G_y = req_body['base_point']
             
-            curve = ecc.Curve(a, b, p, n, G_x, G_y)
+            curve = ecc.Curve(int(a), int(b), int(p), int(n), int(G_x), int(G_y))
 
             message = req_body['message']
             x,y = req_body['key']
 
-            pub_key = ecc.Point(x,y,curve)
+            pub_key = ecc.Point(int(x),int(y),curve)
 
             message_buffer = bytes(message, 'utf-8')
 
@@ -95,21 +95,21 @@ def decrypt(input_type: str):
             b = req_body['b']
             p = req_body['p']
             n = req_body['n']
-            G_x, G_y = req_body['Base Point']
+            G_x, G_y = req_body['base_point']
 
             x1,y1 = req_body['C1']
             x2,y2 = req_body['C2']
 
             
             
-            curve = ecc.Curve(a, b, p, n, G_x, G_y)
+            curve = ecc.Curve(int(a), int(b), int(p), int(n), int(G_x), int(G_y))
 
-            C1 = ecc.Point(x1,y1, curve)
-            C2 = ecc.Point(x2,y2, curve)
+            C1 = ecc.Point(int(x1),int(y1), curve)
+            C2 = ecc.Point(int(x2),int(y2), curve)
 
             pri_key = req_body['key']
             
-            res = ecc.decrypt(curve, pri_key, C1, C2)
+            res = ecc.decrypt(curve, int(pri_key), C1, C2)
 
             return res.replace(b'\x00', b'').decode('utf-8'), 200
 

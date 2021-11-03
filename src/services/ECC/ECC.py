@@ -14,6 +14,24 @@ def encrypt(curve: Curve, plaintext: bytes, public_key: Point,
     k = random.randint(1, curve.n)
     C1 = k * G
     C2 = M + k * public_key
+
+    C1.x = str(C1.x)
+    C1.y = str(C1.y)
+    C1.curve.a = str(C1.curve.a)
+    C1.curve.b = str(C1.curve.b)
+    C1.curve.p = str(C1.curve.p)
+    C1.curve.n = str(C1.curve.n)
+    C1.curve.G_x = str(C1.curve.G_x)
+    C1.curve.G_y = str(C1.curve.G_y)
+
+    C2.x = str(C2.x)
+    C2.y = str(C2.y)
+    C2.curve.a = str(C2.curve.a)
+    C2.curve.b = str(C2.curve.b)
+    C2.curve.p = str(C2.curve.p)
+    C2.curve.n = str(C2.curve.n)
+    C2.curve.G_x = str(C2.curve.G_x)
+    C2.curve.G_y = str(C2.curve.G_y)
     return C1, C2
 
 def decrypt(curve: Curve, private_key: int, C1: Point, C2: Point) -> bytes:

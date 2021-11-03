@@ -272,6 +272,15 @@ def generate_key(curve: Curve,
     randfunc = randfunc or urandom
     private_key = gen_private_key(curve, randfunc)
     public_key = get_public_key(private_key, curve)
+    private_key = str(private_key)
+    public_key.x = str(public_key.x)
+    public_key.y = str(public_key.y)
+    public_key.curve.a = str(public_key.curve.a)
+    public_key.curve.b = str(public_key.curve.b)
+    public_key.curve.p = str(public_key.curve.p)
+    public_key.curve.n = str(public_key.curve.n)
+    public_key.curve.G_x = str(public_key.curve.G_x)
+    public_key.curve.G_y = str(public_key.curve.G_y)
     return private_key, public_key
 
 def gen_private_key(curve: Curve,
